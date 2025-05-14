@@ -53,21 +53,3 @@ df = pd.DataFrame(data)
 df.to_csv(filename, index=False)
 print(f"Saved {len(df)} samples to {filename}")
 
-#print(df)
-# starttime = df['timestamp_us'].iloc[0]
-# print("Start time:", starttime)
-# df['relative_time_us'] = df['timestamp_us'] - starttime
-# print(df)
-# df.to_csv('grip_data_with_relative_time.csv', index=False)
-
-# df = pd.read_csv('grip_data_1.csv')
-# df = df.head(50)
-# # Plot grip vs time
-# plt.figure(figsize=(10, 5))
-# plt.plot(df['timestamp_us'], df['grip_voltage'], marker='o', linestyle='-')
-# plt.xlabel('Time (microseconds)')
-# plt.ylabel('Grip Strength')
-# plt.title('Grip Strength Over First 50 Samples')
-# plt.grid(True)
-# plt.tight_layout()
-# plt.show()
