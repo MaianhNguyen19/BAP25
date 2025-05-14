@@ -8,9 +8,10 @@ import serial.tools.list_ports
 import time
 
 # Replace with your ESP32's serial port
+#921600
 port = 'COM3'
 baud = '921600'
-filename = "grip_data_1.csv"
+filename = "grip_data_2.csv"
 data =[]
 
 
