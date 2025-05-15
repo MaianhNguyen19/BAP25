@@ -1,0 +1,44 @@
+#include <SPI.h>
+
+#define CS_PIN 5        // Chip Select pin for MCP3208
+#define CHANNEL 1       // MCP3208 analog input channel
+
+void setup() {
+  Serial.begin(921600);
+  while (!Serial);
+
+  Serial.println("Starting MCP3208 SPI Test...");
+
+  // Initialize VSPI with default pins
+  SPI.begin(18, 19, 23, CS_PIN);  // SCK, MISO, MOSI, SS
+  pinMode(CS_PIN, OUTPUT);
+  digitalWrite(CS_PIN, HIGH);  // Deselect ADC
+}
+
+// Read from MCP3208 (12-bit ADC)
+uint16_t readMCP3208(uint8_t channel) {
+  uint8_t command = 0b00000110 | ((channel & 0b100) >> 2); // Start + SGL + D2
+  uint8_t msb     = ((channel & 0b011) << 6);              // D1 D0 << 6
+
+  // Start SPI transaction
+  SPI.beginTransaction(SPISettings(100000, MSBFIRST, SPI_MODE0)); // 1 MHz
+
+  digitalWrite(CS_PIN, LOW);
+  delayMicroseconds(1);  // Optional delay per datasheet
+
+  SPI.transfer(command);
+  uint8_t high = SPI.transfer(msb) & 0x0F;
+  uint8_t low  = SPI.transfer(0x00);
+
+  digitalWrite(CS_PIN, HIGH);
+  SPI.endTransaction();
+
+  return (high << 8) | low;  // Combine 12-bit result
+}
+
+void loop() {
+  Serial.print(micros()); // optional
+  uint16_t adc_value = readMCP3208(CHANNEL);
+  Serial.print(",");
+  Serial.println(adc_value); // e.g., "1234567,2048"
+}
