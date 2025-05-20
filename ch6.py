@@ -6,9 +6,9 @@ import os
 import re
 
 # === CONFIGURATION ===
-PORT     = '/dev/cu.usbserial-0001'
+PORT     = 'com3'
 BAUD     = 921600
-DURATION = 2         # seconds
+DURATION = 3        # seconds
 CSV_FILE = 'mcp3208_6ch.csv'
 
 # === OPEN & FLUSH SERIAL PORT ===
@@ -62,7 +62,7 @@ print(f"Saved {len(df)} samples to {CSV_FILE}")
 # === PLOT ===
 plt.figure(figsize=(10, 6))
 for i in range(6):
-    plt.plot(df['time_s'], df[f'ch{i}'],'-o', label=f'ch{i}',)
+    plt.plot(df['time_s'], df[f'ch{i}'], label=f'ch{i}',)
 plt.xlabel('Time (s)')
 plt.ylabel('ADC Value')
 plt.title('MCP3208 6‐Channel Acquisition')
