@@ -1,48 +1,20 @@
-import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
-from scipy.signal import firwin, butter, freqz
 
-# === Settings ===
-fs = 1000  # Sampling frequency in Hz
-lowcut = 40
-highcut = 50
+# 1. Load the merged CSV
+csv_path = r"C:\Users\steph\OneDrive\Documents\BAP25\RecordedData\digilent_ch1_ch2.csv"
+df = pd.read_csv(csv_path)
 
-# === FIR Filter (Blackman Window) ===
-numtaps = 500
-fir_taps = firwin(
-    numtaps=numtaps,
-    cutoff=[lowcut, highcut],
-    window='blackman',
-    pass_zero=False,
-    fs=fs
-)
-w_fir, h_fir = freqz(fir_taps, worN=2048, fs=fs)
+# 2. Plot
+plt.figure(figsize=(12, 6))
+plt.plot(df["Time_s"], df["adc6"], label="ESP32 ADC Ch6", linewidth=1)
+plt.plot(df["Time_s"], df["ch1"],  label="Scope CH1",      linewidth=1, alpha=0.8)
+plt.plot(df["Time_s"], df["ch2"],  label="Scope CH2",      linewidth=1, alpha=0.8)
 
-# === IIR Filter (Butterworth) ===
-order = 4
-b_iir, a_iir = butter(order, [lowcut, highcut], btype='band', fs=fs)
-w_iir, h_iir = freqz(b_iir, a_iir, worN=2048, fs=fs)
-
-# === Plot Magnitude (dB) ===
-plt.figure(figsize=(12, 5))
-plt.plot(w_fir, 20 * np.log10(np.abs(h_fir) + 1e-12), label='FIR (Blackman)')
-plt.plot(w_iir, 20 * np.log10(np.abs(h_iir) + 1e-12), label='Butterworth (IIR)')
-plt.title("Frequency Response (Magnitude in dB)")
-plt.xlabel("Frequency (Hz)")
-plt.ylabel("Magnitude (dB)")
-plt.grid(True, which='both', linestyle='--')
+plt.xlabel("Time (s)")
+plt.ylabel("Voltage / ADC Code")
+plt.title("Combined ESP32 & Scope Data")
 plt.legend()
-plt.tight_layout()
-plt.show()
-
-# === Plot Phase Response ===
-plt.figure(figsize=(12, 5))
-plt.plot(w_fir, np.angle(h_fir, deg=True), label='FIR (Blackman)')
-plt.plot(w_iir, np.angle(h_iir, deg=True), label='Butterworth (IIR)')
-plt.title("Phase Response")
-plt.xlabel("Frequency (Hz)")
-plt.ylabel("Phase (degrees)")
-plt.grid(True, which='both', linestyle='--')
-plt.legend()
+plt.grid(True)
 plt.tight_layout()
 plt.show()

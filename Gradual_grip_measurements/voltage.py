@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.signal import firwin, lfilter
+import os
 
 # === FIR Filter Functions ===
 def blackman_bandpass_filter(data, lowcut, highcut, fs, numtaps=101):
@@ -36,7 +37,8 @@ def compute_fft_db(signal, fs):
 fs = 1000  # Sampling rate
 window_ms = 1000
 window_size = int(fs * (window_ms / 1000))
-base_path = "/Users/davidlacle/Documents/TUDelft/BAP/BAP25/Gradual_grip_measurements_nicelines/"
+base_path = "C:/Users/steph/OneDrive/Documents/BAP25/Gradual_grip_measurements_nicelines/"
+
 file_suffixes = ["1f","1m", "2f", "2m","3f","3m"]
 #file_suffixes = ["1m","2f", "3f", "4f","5m","6m"]
 base_name = "mcp3208_6ch_measurement_grip"
@@ -45,7 +47,8 @@ all_stats = []
 plt.figure(figsize=(12, 6))
 
 for suffix in file_suffixes:
-    filename = f"{base_path}{base_name}{suffix}{"_attempt3"}.csv"
+    filename = os.path.join(base_path, f"{base_name}{suffix}_attempt3.csv")
+
     #filename = f"{base_path}{base_name}.csv"
     df = pd.read_csv(filename).iloc[2:]  # Drop first row
     df["time_s"] = df["time_s"].astype(float)
@@ -59,8 +62,8 @@ for suffix in file_suffixes:
 
     # Compute RMS
     rms = moving_rms(filtered, window_size)
-    rms = rms[10:]  # just remove the first few points if needed               # remove first 10 RMS points just to clean it up
-    rms_zeroed = rms
+    rms = rms[500:]  # just remove the first few points if needed               # remove first 10 RMS points just to clean it up
+    rms_zeroed = rms-rms[0]
     rms_zeroed = rms_zeroed*1000
     # Time axis for RMS
     time_trimmed = df['time_s'].iloc[:len(rms)]

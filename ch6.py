@@ -6,7 +6,7 @@ import os
 import re
 
 # === CONFIGURATION ===
-PORT     = 'com3'
+PORT     = 'com5'
 BAUD     = 921600
 DURATION = 3        # seconds
 CSV_FILE = 'mcp3208_6ch.csv'
@@ -18,7 +18,6 @@ print(f"Connected to {PORT} @ {BAUD} baud")
 
 start_time = time.time()
 data = []
-
 print("Recording... (Ctrl-C to stop early)")
 try:
     while True:
