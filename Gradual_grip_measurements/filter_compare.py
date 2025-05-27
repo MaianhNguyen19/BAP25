@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # 1. Load the merged CSV
-csv_path = r"C:\Users\steph\OneDrive\Documents\BAP25\RecordedData\digilent_ch1_ch2.csv"
+csv_path = r"C:\Users\steph\OneDrive\Documents\BAP25\RecordedData\merged_esp_scope.csv"
 df = pd.read_csv(csv_path)
 
 # 2. Plot

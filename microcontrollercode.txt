@@ -1,7 +1,7 @@
 #include <SPI.h>
 
 #define CS_PIN 5        // Chip Select pin for MCP3208
-#define CHANNEL 1       // MCP3208 analog input channel
+#define CHANNEL 6       // MCP3208 analog input channel
 
 void setup() {
   Serial.begin(921600);
