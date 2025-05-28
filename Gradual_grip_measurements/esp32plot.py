@@ -1,7 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-df = pd.read_csv("esp32_test.csv")
+df = pd.read_csv("esp32_test_maianh.csv")
 plt.figure(figsize=(8,3))
 plt.plot(df["Time_s"], df["ADC6"], '-o', markersize=2)
 plt.xlabel("Time (s)")

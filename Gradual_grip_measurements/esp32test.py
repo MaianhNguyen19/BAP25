@@ -4,10 +4,10 @@ import serial
 import numpy as np
 
 # ——— CONFIG ———
-PORT       = "COM5"
+PORT       = "COM9"
 BAUD       = 921600
 DURATION   = 10        # seconds to capture
-CSV_OUT    = "esp32_test1.csv"
+CSV_OUT    = "esp32_test_maianh.csv"
 # ——————————
 
 def main():
