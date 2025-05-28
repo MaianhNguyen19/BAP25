@@ -6,8 +6,8 @@ import numpy as np
 # ——— CONFIG ———
 PORT       = "COM9"
 BAUD       = 921600
-DURATION   = 30 * 60      # seconds to capture
-CSV_OUT    = "esp32_test_maianhsleep.csv"
+DURATION   = 5 * 60    # seconds to capture
+CSV_OUT    = "esp32_test_maianhwakingup2.csv"
 # ——————————
 
 def main():
