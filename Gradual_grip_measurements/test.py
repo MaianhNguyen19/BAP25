@@ -1,25 +1,99 @@
-import pandas as pd
+import threading
+import time
+import csv
+import signal
 import numpy as np
-import matplotlib.pyplot as plt
+import dwfpy as dwf
+import datetime
+import serial
 
-df = pd.read_csv(r"C:\Users\steph\OneDrive\Documents\BAP25\RecordedData\merged_esp_scope.csv")
+# === Parameters ===
+SAMPLE_RATE = 5000  # Hz
+BUFFER_SIZE = 512   # Samples
+READ_INTERVAL = 0.05  # Seconds (50 ms)
+CSV_FILE = "experiment_log.csv"
+
+# === Thread control flag ===
+running = True
+
+# === Shared queue to pass data from thread to logger ===
+osc_queue = []
+
+# === Oscilloscope Thread Function ===
+def record_oscilloscope():
+    with dwf.Device() as device:
+        print(f"Connected to: {device.name} ({device.serial_number})")
+        scope = device.analog_input
+        scope[0].setup(range=5.0)
+        scope.sample_rate = SAMPLE_RATE
+        scope.buffer_size = BUFFER_SIZE
+        scope.scan_shift(sample_rate=SAMPLE_RATE, buffer_size=BUFFER_SIZE, configure=True, start=True)
+
+        while running:
+            time.sleep(READ_INTERVAL)
+            scope.read_status(read_data=True)
+            samples = np.array(scope[0].get_data())
+            ts = time.perf_counter()
+            osc_queue.append((ts, samples.tolist()))
 
 
-# 1) Examine sample intervals
-dts = np.diff(df["Time_s"].dropna())
-print(f"ESP32 Δt: mean={np.mean(dts):.6f}s, std={np.std(dts):.6f}s")
+def record_esp32_serial(port="COM5", baud=921600):
+    try:
+        ser = serial.Serial(port, baud, timeout=1)
+        print(f"Connected to ESP32 on {port} @ {baud} baud.")
+    except serial.SerialException as e:
+        print(f"Serial error: {e}")
+        return
 
-# 2) Convert ADC counts to volts
-df["adc6_v"] = df["adc6"] * (5.0/4096)
+    while running:
+        try:
+            line = ser.readline().decode(errors='ignore').strip()
+            if line:
+                ts = time.perf_counter()
+                esp_queue.append((ts, line))
+        except Exception as e:
+            print(f"Read error: {e}")
+            break
 
-# 3) Scatter-plot all three
-plt.figure(figsize=(10,5))
-plt.scatter(df["Time_s"], df["adc6_v"], s=5, label="ESP32 CH6", c="C0")
-plt.plot(  df["Time_s"], df["ch1"],  label="Scope CH1", alpha=0.8)
-plt.plot(  df["Time_s"], df["ch2"],  label="Scope CH2", alpha=0.8)
-plt.xlabel("Time (s)")
-plt.ylabel("Voltage (V)")
-plt.title("Sampling Verification")
-plt.legend()
-plt.grid()
-plt.show()
+    ser.close()
+        
+
+# === Signal handler for Ctrl+C ===
+def stop_all(sig, frame):
+    global running
+    print("Stopping recording...")
+    running = False
+
+signal.signal(signal.SIGINT, stop_all)
+
+# === Data Saver (Main Thread) ===
+def gather_and_save():
+    with open(CSV_FILE, "w", newline='') as f:
+        # Write metadata as commented header lines
+        f.write(f"# Sample rate: {SAMPLE_RATE} Hz\n")
+        f.write(f"# Buffer size: {BUFFER_SIZE} samples\n")
+        f.write(f"# Read interval: {READ_INTERVAL} seconds\n")
+        f.write(f"# Recording start: {datetime.datetime.now().isoformat()}\n")
+
+        writer = csv.writer(f)
+        writer.writerow(["timestamp", "value"])  # CSV header
+
+        print("Logging to CSV... Press Ctrl+C to stop.")
+        while running or len(osc_queue) > 0:
+            if osc_queue:
+                ts, samples = osc_queue.pop(0)
+                for val in samples:
+                    writer.writerow([ts, val])
+            else:
+                time.sleep(0.005)
+
+        print(f"Recording complete. Data saved to: {CSV_FILE}")
+
+# === Start threads ===
+osc_thread = threading.Thread(target=record_oscilloscope)
+osc_thread.start()
+
+# Run main saver loop in main thread
+gather_and_save()
+
+osc_thread.join()
