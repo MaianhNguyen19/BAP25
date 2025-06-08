@@ -8,11 +8,11 @@ import datetime
 import serial
 
 # === Parameters ===
-Record_time = 20
+Record_time = 60*2
 SAMPLE_RATE = 1000  # Hz
 BUFFER_SIZE = 10000   # Samples
 READ_INTERVAL = 1*(BUFFER_SIZE/SAMPLE_RATE)  # Seconds (50 ms)
-CSV_FILE = "sannegrip.csv"
+CSV_FILE = "daivdlgrip.csv"
 
 # === Thread control flag ===
 running = True
@@ -157,13 +157,26 @@ def gather_and_save():
 osc_thread = threading.Thread(target=record_oscilloscope)
 esp_thread = threading.Thread(target=record_esp32_serial)
 
+# make them daemon threads so they won’t hang the process if something goes wrong
+osc_thread.daemon = True
+esp_thread.daemon = True
+
 osc_thread.start()
 esp_thread.start()
 
-gather_and_save()
+# wait for the auto‐stop timer to fire, which calls stop_all()
+stop_timer.join()                # blocks until Record_time elapses
 
-osc_thread.join()
-esp_thread.join()
+# now both threads will naturally exit their loops (running==False)
+print("Waiting for acquisition threads to finish…")
+osc_thread.join(timeout=1.0)     # give them up to 1s to wrap up
+esp_thread.join(timeout=1.0)
+
+# now safely gather whatever’s left in the queues and write the CSV
+gather_and_save()                
+
+print("All threads joined. Program ended.")
+
 print("All threads joined. Program ended.")
 
 
