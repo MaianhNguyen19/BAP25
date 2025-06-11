@@ -22,7 +22,7 @@ def predict_resistance_from_weight(w):
     return a * (w ** b)
 
 # 4) Voltage‐divider conversion parameters
-R_FIXED = 10e3   # 10 kΩ fixed resistor
+R_FIXED = 2.1e3   # 10 kΩ fixed resistor
 V_SUPPLY = 3.3   # 3.3 V source
 
 def voltage_from_resistance(R_sensor):
@@ -57,20 +57,33 @@ V_fit = voltage_from_resistance(R_fit)
 plt.figure(figsize=(5, 4))
 plt.loglog(weights, resistances, 'o', label="Original data")
 plt.loglog(w_fit, R_fit, '-', label=f"Fit: R = {a:.2e}·w^{b:.2f}")
-plt.loglog(w_input, R_pred, 's', markersize=8, label="Your input → R_pred", color='C1')
+#plt.loglog(w_input, R_pred, 's', markersize=8, label="Your input → R_pred", color='C1')
 plt.xlabel("Weight (g) [log scale]")
 plt.ylabel("Resistance (Ω) [log scale]")
 plt.title("Sensor Resistance vs. Weight")
 plt.legend()
 plt.grid(True, which='both', ls='--', alpha=0.5)
 plt.tight_layout()
+plt.savefig("Rvsw.svg", format="svg")
 plt.show()
 
-plt.figure(figsize=(5, 4))
-plt.loglog(w_fit, V_fit, '-', label="Voltage vs. Weight")
-plt.loglog(w_input, V_pred, 's', markersize=8, label="Your input → V_pred", color='C1')
+# plt.figure(figsize=(5, 4))
+# plt.loglog(V_fit, w_fit, '-', label="Voltage vs. Weight")
+# plt.loglog(V_pred,w_input, 's', markersize=8, label="Your input → V_pred", color='C1')
+# plt.xlabel("Weight (g) [log scale]")
+# plt.ylabel("Voltage (V) [log scale]")
+# plt.title("Divider Voltage vs. Weight")
+# plt.legend()
+# plt.grid(True, which='both', ls='--', alpha=0.5)
+# plt.tight_layout()
+# plt.show()
+
+plt.figure(figsize=(5,4))
+#plt.semilogx(w_fit, V_fit, '-', label="Fitted curve")
+plt.plot(w_input,V_pred, 's', markersize=8, label="Your input → V_pred", color='C1')
+plt.plot(w_fit, V_fit, '-', label="Fit")
 plt.xlabel("Weight (g) [log scale]")
-plt.ylabel("Voltage (V) [log scale]")
+plt.ylabel("Voltage (V) [linear scale]")
 plt.title("Divider Voltage vs. Weight")
 plt.legend()
 plt.grid(True, which='both', ls='--', alpha=0.5)
