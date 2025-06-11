@@ -30,7 +30,7 @@ def weight_from_voltage_ch1(V_ch1):
 
 
 # === 2) Load CSV and clean ===
-csv_path = "jeanrgrip.csv"   # ← replace with your actual filename
+csv_path = "recpeter.csv"   # ← replace with your actual filename
 df = pd.read_csv(csv_path)
 
 # Drop rows where osc_ch1 or osc_ch2 is NaN
@@ -167,9 +167,14 @@ plt.grid(True)
 
 # 8d) Scatter: (RMS_slow vs. Weight) + power-law fit on log–log axes
 plt.subplot(4, 1, 4)
-plt.scatter(rms_ch2_slow,time_rms_fast, color="black", s=20, label="Data")
-plt.plot(x_fit, y_fit_power, color="green", lw=2,
-         label=f"Fit: w={A:.2e}·x^{B:.2f}")
+x = rms_ch2_slow
+weight_trimmed = osc["ch1_smoothed"]
+print(len(osc["ch1_smoothed"]))
+n = min(len(x), len(weight_trimmed))
+x = x[:n]
+y = weight_trimmed[:n]
+plt.scatter(x,y, color="black", s=20, label="Data")
+#plt.plot(x_fit, y_fit_power, color="green", lw=2, label=f"Fit: w={A:.2e}·x^{B:.2f}")
 # plt.xscale("log")
 # plt.yscale("log")
 plt.xlabel("CH2 RMS_slow (V) [log scale]")
@@ -216,4 +221,17 @@ plt.title('Estimate from Non-pressure Sensor (CH2)')
 plt.grid(True)
 plt.legend()
 plt.tight_layout()
+plt.show()
+
+# weight_trimmed is osc["weight_g"][:len(rms_ch2_slow)]
+x = rms_ch2_slow
+y = weight_trimmed
+print(len(x))
+
+plt.figure(figsize=(6,6))
+plt.scatter(x, y, color="black", s=20)
+plt.xlabel("CH2 RMS_slow (V)")
+plt.ylabel("Weight from CH1 (g)")
+plt.title("Scatter: CH2 RMS vs. Weight")
+plt.grid(True)
 plt.show()

@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # Load your CSV
-df = pd.read_csv("daivdlgrip.csv")
+df = pd.read_csv("recdavid.csv")
 
 # Drop rows with missing oscilloscope data
 osc = df.dropna(subset=["osc_ch1", "osc_ch2"])

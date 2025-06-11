@@ -8,11 +8,11 @@ import datetime
 import serial
 
 # === Parameters ===
-Record_time = 20
+Record_time = 30
 SAMPLE_RATE = 1000  # Hz
 BUFFER_SIZE = 10000   # Samples
 READ_INTERVAL = 1*(BUFFER_SIZE/SAMPLE_RATE)  # Seconds (50 ms)
-CSV_FILE = "gradmath.csv"
+CSV_FILE = "recdavid.csv"
 
 # === Thread control flag ===
 running = True
