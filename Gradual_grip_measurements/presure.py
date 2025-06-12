@@ -109,7 +109,7 @@ weight_trimmed = osc["weight_g"].iloc[: len(rms_ch2_fast)].values
 
 
 # === 6) Apply exponential moving average (EMA) to slow down RMS if needed ===
-tau = 0.2  # seconds, adjust to match CH1 sensor’s own dynamics
+tau = 0.01  # seconds, adjust to match CH1 sensor’s own dynamics
 alpha = 1 - np.exp(-1.0 / (tau * fs))
 
 rms_ch2_slow = np.zeros_like(rms_ch2_fast)
@@ -135,51 +135,84 @@ y_fit_power = A * (x_fit ** B)
 
 
 # === 8) Plot everything ===
-plt.figure(figsize=(10, 10))
+#plt.figure(figsize=(10, 10))
 
 # 8a) CH1 raw vs. smoothed voltage
-plt.subplot(4, 1, 1)
-plt.plot(osc["timestamp"], osc["ch1_volts"], color="gray", alpha=0.5, label="CH1 raw")
-plt.plot(osc["timestamp"], osc["ch1_smoothed"], color="blue", label="CH1 smoothed")
+# plt.subplot(4, 1, 1)
+# plt.plot(osc["timestamp"], osc["ch1_volts"], color="gray", alpha=0.5, label="CH1 raw")
+# plt.plot(osc["timestamp"], osc["ch1_smoothed"], color="blue", label="CH1 smoothed")
+# plt.xlabel("Time (s)")
+# plt.ylabel("Voltage (V)")
+# plt.title("Channel 1: Raw vs. Smoothed (5 Hz low-pass)")
+# plt.legend()
+# plt.grid(True)
+
+# # 8b) Weight (g) from CH1 smoothed vs. time
+# plt.subplot(4, 1, 2)
+# plt.plot(osc["timestamp"], osc["weight_g"], color="navy", lw=1)
+# plt.xlabel("Time (s)")
+# plt.ylabel("Weight (g)")
+# plt.title("Presure sensor Smoothed")
+# plt.grid(True)
+
+# # 8c) CH2 RMS: fast (red) vs. slow (orange) vs. time
+# plt.subplot(4, 1, 3)
+# # Choose cutoff time
+# === Adjustable cutoff times ===
+trim_start = 15.0   # seconds
+trim_end   = 110.0   # seconds
+# Mask based on time
+# Create masks using the same trim values
+mask_weight = (osc["timestamp"] > trim_start) & (osc["timestamp"] < trim_end)
+mask_rms    = (time_rms_fast > trim_start) & (time_rms_fast < trim_end)
+
+# Normalize based on valid range only
+valid_weights = osc["weight_g"][mask_weight]
+weight_norm = (osc["weight_g"] - np.min(valid_weights)) / (np.max(valid_weights) - np.min(valid_weights))
+
+valid_rms = rms_ch2_slow[mask_rms]
+rms_norm = (rms_ch2_slow - np.min(valid_rms)) / (np.max(valid_rms) - np.min(valid_rms))
+# # Plot both trimmed and aligned
+# plt.plot(osc["timestamp"][mask_weight], weight_norm[mask_weight], label="Weight (normalized)", color="navy", lw=1)
+# plt.plot(time_rms_fast[mask_rms], rms_norm[mask_rms], label=f"RMS (normalized)", color="orange", lw=2)
+# # plt.plot(time_rms_fast, rms_normalized, color="orange", lw=2, label=f"RMS slow (τ={tau}s)")
+# # #plt.plot(time_rms_fast, rms_ch2_fast, color="red", lw=1, label="RMS fast (50 ms)")
+# # plt.plot(osc["timestamp"], (osc["weight_g"] - np.min(osc["weight_g"])) / (np.max(osc["weight_g"]) - np.min(osc["weight_g"])), color="navy", lw=1)
+# # # plt.plot(time_rms_fast, 
+# # #          (rms_ch2_slow - np.min(rms_ch2_slow)) / (np.max(rms_ch2_slow) - np.min(rms_ch2_slow)), 
+# # #          color="orange", lw=2, label=f"RMS slow (τ={tau}s)")
+# plt.xlabel("Time (s)")
+# plt.ylabel("RMS (V)")
+# plt.title("CH2 50 Hz RMS")
+# plt.legend()
+# plt.grid(True)
+
+# # 8d) Scatter: (RMS_slow vs. Weight) + power-law fit on log–log axes
+# plt.subplot(4, 1, 4)
+# plt.scatter(rms_ch2_slow,time_rms_fast, color="black", s=20, label="Data")
+# plt.plot(x_fit, y_fit_power, color="green", lw=2,
+#          label=f"Fit: w={A:.2e}·x^{B:.2f}")
+# # plt.xscale("log")
+# # plt.yscale("log")
+# plt.xlabel("CH2 RMS_slow (V) [log scale]")
+# plt.ylabel("Weight (g) [log scale]")
+# plt.title("Correlation: Smoothed RMS → Weight (Power-Law Fit)")
+# plt.legend(fontsize="small")
+# plt.grid(True, which="both", ls="--", alpha=0.5)
+
+plt.figure(figsize=(10, 4))
+plt.plot(osc["timestamp"][mask_weight], weight_norm[mask_weight], label="Presure (normalized)", color="navy", lw=1)
+plt.plot(time_rms_fast[mask_rms], rms_norm[mask_rms], label=f"RMS (normalized)", color="orange", lw=2)
+
 plt.xlabel("Time (s)")
-plt.ylabel("Voltage (V)")
-plt.title("Channel 1: Raw vs. Smoothed (5 Hz low-pass)")
+plt.ylabel("Normalized Value")
+plt.title("RMS value vs Presure ")
 plt.legend()
 plt.grid(True)
-
-# 8b) Weight (g) from CH1 smoothed vs. time
-plt.subplot(4, 1, 2)
-plt.plot(osc["timestamp"], osc["weight_g"], color="navy", lw=1)
-plt.xlabel("Time (s)")
-plt.ylabel("Weight (g)")
-plt.title("Weight from CH1 Smoothed vs. Time")
-plt.grid(True)
-
-# 8c) CH2 RMS: fast (red) vs. slow (orange) vs. time
-plt.subplot(4, 1, 3)
-plt.plot(time_rms_fast, rms_ch2_fast, color="red", lw=1, label="RMS fast (50 ms)")
-plt.plot(time_rms_fast, rms_ch2_slow, color="orange", lw=2, label=f"RMS slow (τ={tau}s)")
-plt.xlabel("Time (s)")
-plt.ylabel("RMS (V)")
-plt.title("CH2 50 Hz RMS: Fast vs. EMA Smoothed")
-plt.legend()
-plt.grid(True)
-
-# 8d) Scatter: (RMS_slow vs. Weight) + power-law fit on log–log axes
-plt.subplot(4, 1, 4)
-plt.scatter(rms_ch2_slow,time_rms_fast, color="black", s=20, label="Data")
-plt.plot(x_fit, y_fit_power, color="green", lw=2,
-         label=f"Fit: w={A:.2e}·x^{B:.2f}")
-# plt.xscale("log")
-# plt.yscale("log")
-plt.xlabel("CH2 RMS_slow (V) [log scale]")
-plt.ylabel("Weight (g) [log scale]")
-plt.title("Correlation: Smoothed RMS → Weight (Power-Law Fit)")
-plt.legend(fontsize="small")
-plt.grid(True, which="both", ls="--", alpha=0.5)
-
 plt.tight_layout()
+plt.savefig("humvspres.svg", format='svg')
 plt.show()
+
 
 # === 9) Compute Pearson correlation between CH2 RMS_slow and Weight ===
 from scipy.stats import pearsonr
@@ -215,5 +248,81 @@ plt.ylabel('Weight (g)')
 plt.title('Estimate from Non-pressure Sensor (CH2)')
 plt.grid(True)
 plt.legend()
+plt.tight_layout()
+plt.show()
+
+from scipy.interpolate import interp1d
+
+# Interpolate RMS onto the same time base as the weight signal
+rms_interp_func = interp1d(time_rms_fast[mask_rms], rms_norm[mask_rms], kind='linear', fill_value="extrapolate")
+rms_interp_to_weight = rms_interp_func(osc["timestamp"][mask_weight])
+from scipy.stats import pearsonr
+
+# Correlation between normalized signals
+corr_coef, p_value = pearsonr(weight_norm[mask_weight], rms_interp_to_weight)
+
+print(f"Pearson correlation: r = {corr_coef:.3f}, p = {p_value:.3e}")
+
+from scipy.signal import correlate
+
+# Both signals must have same length and time base
+signal1 = weight_norm[mask_weight]
+signal2 = rms_interp_to_weight
+
+# Compute cross-correlation
+cross_corr = correlate(signal1 - np.mean(signal1), signal2 - np.mean(signal2), mode='full')
+
+# Generate lags
+lags = np.arange(-len(signal1) + 1, len(signal1))
+
+# Find lag of max correlation
+max_corr_lag = lags[np.argmax(cross_corr)]
+sample_interval = np.mean(np.diff(osc["timestamp"]))  # assuming constant sampling
+time_lag = max_corr_lag * sample_interval
+
+print(f"Max cross-correlation lag: {time_lag:.3f} seconds")
+plt.figure(figsize=(6, 4))
+plt.plot(lags * sample_interval, cross_corr)
+plt.axvline(time_lag, color='red', linestyle='--', label=f"Peak lag: {time_lag:.2f} s")
+plt.xlabel("Time lag (s)")
+plt.ylabel("Cross-correlation")
+plt.title("Cross-correlation of Weight vs. RMS")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
+from scipy.stats import f
+
+# === 1) Stack your normalized data (2 features: grip + rms) ===
+X = np.column_stack([weight_norm[mask_weight], rms_norm[mask_rms]])
+
+# === 2) Apply PCA ===
+pca = PCA(n_components=2)
+X_pca = pca.fit_transform(X)
+
+# === 3) Compute Hotelling's T² statistic for each point ===
+# T² = sum((score_i / std_i)^2) over all PCs
+scores = X_pca
+explained_variance = pca.explained_variance_
+T2 = np.sum((scores ** 2) / explained_variance, axis=1)
+
+# === 4) Calculate the 95% control limit ===
+n_samples, n_features = X.shape
+alpha = 0.05
+limit_95 = (n_features * (n_samples - 1)) / (n_samples - n_features) * f.ppf(1 - alpha, n_features, n_samples - n_features)
+
+# === 5) Plot T² statistic ===
+plt.figure(figsize=(10, 4))
+plt.plot(T2, label="Hotelling $T^2$", color='blue')
+plt.axhline(limit_95, color='red', linestyle='--', label="95% Threshold")
+plt.title("MSPC using Hotelling’s $T^2$ Statistic")
+plt.xlabel("Sample Index")
+plt.ylabel("$T^2$")
+plt.legend()
+plt.grid(True)
 plt.tight_layout()
 plt.show()

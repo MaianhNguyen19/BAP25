@@ -80,12 +80,16 @@ plt.show()
 
 plt.figure(figsize=(5,4))
 #plt.semilogx(w_fit, V_fit, '-', label="Fitted curve")
-plt.plot(w_input,V_pred, 's', markersize=8, label="Your input → V_pred", color='C1')
+#plt.plot(w_input,V_pred, 's', markersize=8, label="Your input → V_pred", color='C1')
 plt.plot(w_fit, V_fit, '-', label="Fit")
-plt.xlabel("Weight (g) [log scale]")
-plt.ylabel("Voltage (V) [linear scale]")
-plt.title("Divider Voltage vs. Weight")
+plt.xlim(np.min(w_fit), np.max(w_fit))     # X-axis: from 0 to 1000
+plt.ylim(np.min(V_fit), np.max(V_fit))     # Y-axis: from 0 to 0.02
+plt.xlabel("Weight (g)")
+plt.ylabel("Voltage (V)")
+plt.title("Voltage vs Weight")
+
 plt.legend()
 plt.grid(True, which='both', ls='--', alpha=0.5)
+plt.savefig("voltagevspres.svg", format='svg')
 plt.tight_layout()
 plt.show()
